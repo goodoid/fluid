@@ -100,6 +100,16 @@ type Mount struct {
 	EncryptOptions []EncryptOption `json:"encryptOptions,omitempty"`
 }
 
+// DataRestoreLocation describes the spec restore location of  Dataset
+type DataRestoreLocation struct {
+	// Path describes the path of restore, in the form of  local://subpath or pvc://<pvcName>/subpath
+	// +optional
+	Path string `json:"path,omitempty"`
+	// NodeName describes the nodeName of restore if Path is  in the form of local://subpath
+	// +optional
+	NodeName string `json:"nodeName,omitempty"`
+}
+
 // DatasetSpec defines the desired state of Dataset
 type DatasetSpec struct {
 	// Mount Points to be mounted on Alluxio.
@@ -117,6 +127,10 @@ type DatasetSpec struct {
 	// +optional
 	NodeAffinity *CacheableNodeAffinity `json:"nodeAffinity,omitempty"`
 
+	// If specified, the pod's tolerations.
+	// +optional
+	Tolerations []v1.Toleration `json:"tolerations,omitempty"`
+
 	// AccessModes contains all ways the volume backing the PVC can be mounted
 	// +optional
 	AccessModes []v1.PersistentVolumeAccessMode `json:"accessModes,omitempty"`
@@ -129,6 +143,10 @@ type DatasetSpec struct {
 	// +kubebuilder:validation:Enum=Exclusive;"";Shared
 	// +optional
 	PlacementMode PlacementMode `json:"placement,omitempty"`
+
+	// DataRestoreLocation is the location to load data of dataset  been backuped
+	// +optional
+	DataRestoreLocation *DataRestoreLocation `json:"dataRestoreLocation,omitempty"`
 }
 
 // Runtime describes a runtime to be used to support dataset

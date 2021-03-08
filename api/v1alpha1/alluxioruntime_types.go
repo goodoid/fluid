@@ -100,6 +100,16 @@ type AlluxioFuseSpec struct {
 
 	// Arguments that will be passed to Alluxio Fuse
 	Args []string `json:"args,omitempty"`
+
+	// If the fuse client should be deployed in global mode,
+	// otherwise the affinity should be considered
+	// +optional
+	Global bool `json:"global,omitempty"`
+
+	// NodeSelector is a selector which must be true for the fuse client to fit on a node,
+	// this option only effect when global is enabled
+	// +optional
+	NodeSelector map[string]string `json:"nodeSelector,omitempty"`
 }
 
 // Level describes configurations a tier needs. <br>
@@ -230,6 +240,13 @@ type AlluxioRuntimeSpec struct {
 	// Manage monitoring for Alluxio Runtime
 	// +optional
 	Monitoring bool `json:"monitoring,omitempty"`
+
+	// Name of the configMap used to support HDFS configurations when using HDFS as Alluxio's UFS. The configMap
+	// must be in the same namespace with the AlluxioRuntime. The configMap should contain user-specific HDFS conf files in it.
+	// For now, only "hdfs-site.xml" and "core-site.xml" are supported. It must take the filename of the conf file as the key and content
+	// of the file as the value.
+	// +optional
+	HadoopConfig string `json:"hadoopConfig,omitempty"`
 }
 
 // +kubebuilder:object:root=true

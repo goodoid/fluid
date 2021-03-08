@@ -16,12 +16,14 @@ limitations under the License.
 package alluxio
 
 import (
+	"errors"
 	"fmt"
+	"os"
+	"strings"
+
 	datav1alpha1 "github.com/fluid-cloudnative/fluid/api/v1alpha1"
 	"github.com/fluid-cloudnative/fluid/pkg/utils"
 	"github.com/fluid-cloudnative/fluid/pkg/utils/tieredstore"
-	"os"
-	"strings"
 )
 
 func (e *AlluxioEngine) transform(runtime *datav1alpha1.AlluxioRuntime) (value *Alluxio, err error) {
@@ -40,13 +42,13 @@ func (e *AlluxioEngine) transform(runtime *datav1alpha1.AlluxioRuntime) (value *
 	value.FullnameOverride = e.name
 
 	// 1.transform the common part
-	err = e.transformCommonPart(runtime, value)
+	err = e.transformCommonPart(runtime, dataset, value)
 	if err != nil {
 		return
 	}
 
 	// 2.transform the masters
-	err = e.transformMasters(runtime, value)
+	err = e.transformMasters(runtime, dataset, value)
 	if err != nil {
 		return
 	}
@@ -63,25 +65,33 @@ func (e *AlluxioEngine) transform(runtime *datav1alpha1.AlluxioRuntime) (value *
 		return
 	}
 
-	// 5.transform the dataset if it has local path or volume
+	// 5.transform the hadoop non-default configurations
+	err = e.transformHadoopConfig(runtime, value)
+	if err != nil {
+		return
+	}
+
+	// 6.transform the dataset if it has local path or volume
 	e.transformDatasetToVolume(runtime, dataset, value)
 
-	// 6.transform the permission
+	// 7.transform the permission
 	e.transformPermission(runtime, value)
 
-	// 7.set optimization parameters
+	// 8.set optimization parameters
 	e.optimizeDefaultProperties(runtime, value)
 
-	// 8.allocate port for fluid engine
+	// 9.allocate port for fluid engine
 	err = e.allocatePorts(value)
 
-	// 9.set engine properties
+	// 10.set engine properties
 	e.setPortProperties(runtime, value)
 	return
 }
 
 // 2. Transform the common part
-func (e *AlluxioEngine) transformCommonPart(runtime *datav1alpha1.AlluxioRuntime, value *Alluxio) (err error) {
+func (e *AlluxioEngine) transformCommonPart(runtime *datav1alpha1.AlluxioRuntime,
+	dataset *datav1alpha1.Dataset,
+	value *Alluxio) (err error) {
 
 	value.Image, value.ImageTag = e.parseRuntimeImage()
 	// value.Image = "registry.cn-huhehaote.aliyuncs.com/alluxio/alluxio"
@@ -209,11 +219,16 @@ func (e *AlluxioEngine) transformCommonPart(runtime *datav1alpha1.AlluxioRuntime
 		value.Monitoring = ALLUXIO_RUNTIME_METRICS_LABEL
 	}
 
+	// transform Tolerations
+	e.transformTolerations(dataset, value)
+
 	return
 }
 
 // 2. Transform the masters
-func (e *AlluxioEngine) transformMasters(runtime *datav1alpha1.AlluxioRuntime, value *Alluxio) (err error) {
+func (e *AlluxioEngine) transformMasters(runtime *datav1alpha1.AlluxioRuntime,
+	dataset *datav1alpha1.Dataset,
+	value *Alluxio) (err error) {
 
 	value.Master = Master{}
 
@@ -256,6 +271,36 @@ func (e *AlluxioEngine) transformMasters(runtime *datav1alpha1.AlluxioRuntime, v
 	// 	value.Master.Env["ALLUXIO_UID"] = strconv.FormatInt(*runtime.Spec.RunAs.UID, 10)
 	// 	value.Master.Env["ALLUXIO_GID"] = strconv.FormatInt(*runtime.Spec.RunAs.GID, 10)
 	// }
+	// if the dataset indicates a restore path, need to load the  backup file in it
+
+	if dataset.Spec.DataRestoreLocation != nil {
+		if dataset.Spec.DataRestoreLocation.Path != "" {
+			pvcName, path, err := utils.ParseBackupRestorePath(dataset.Spec.DataRestoreLocation.Path)
+			if err != nil {
+				e.Log.Error(err, "restore path cannot analyse", "Path", dataset.Spec.DataRestoreLocation.Path)
+			}
+			if pvcName != "" {
+				// RestorePath is in the form of pvc://<pvcName>/subpath
+				value.Master.Restore.Enabled = true
+				value.Master.Restore.PVCName = pvcName
+				value.Master.Restore.Path = path
+				value.Master.Env["JOURNAL_BACKUP"] = "/pvc" + path + e.GetMetadataFileName()
+			} else if dataset.Spec.DataRestoreLocation.NodeName != "" {
+				// RestorePath is in the form of local://subpath
+				value.Master.Restore.Enabled = true
+				if len(value.Master.NodeSelector) == 0 {
+					value.Master.NodeSelector = map[string]string{}
+				}
+				value.Master.NodeSelector["kubernetes.io/hostname"] = dataset.Spec.DataRestoreLocation.NodeName
+				value.Master.Env["JOURNAL_BACKUP"] = "/host/" + e.GetMetadataFileName()
+				value.Master.Restore.Path = path
+			} else {
+				// RestorePath in Dataset cannot analyse
+				err := errors.New("DataRestoreLocation in Dataset cannot analyse, will not restore")
+				e.Log.Error(err, "restore path cannot analyse", "Location", dataset.Spec.DataRestoreLocation)
+			}
+		}
+	}
 
 	return
 }
