@@ -61,3 +61,25 @@ Create the name of the service account to use
     {{ default "default" .Values.serviceAccount.name }}
 {{- end -}}
 {{- end -}}
+
+{{/*relace registry to registry-vpc
+*/}}
+{{- define "fluid.imageTransform" -}}
+{{- $image := index . 0 -}}
+{{- $tag := index . 1 -}}
+{{- $isPullImageByVpc := true -}}
+{{- $isAppendTag := true -}}
+{{- $argLen := len . -}}
+{{- if gt $argLen 2 -}}
+{{- $isPullImageByVpc = index . 2 -}}
+{{- $isAppendTag = index . 3 -}}
+{{- end -}}
+{{- if and $isAppendTag $tag -}}
+{{- $image = printf "%s:%s" $image $tag -}}
+{{- end -}}
+{{- if $isPullImageByVpc -}}
+"{{ $image | replace "registry." "registry-vpc." }}"
+{{- else -}}
+"{{ $image }}"
+{{- end -}}
+{{- end -}}

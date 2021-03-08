@@ -31,7 +31,7 @@ spec:
       - operator: Exists
       #hostNetwork: true
       containers:
-      - image: "{{ .Values.runtime.alluxio.controller.image }}"
+      - image: {{ include "fluid.imageTransform" (list .Values.runtime.alluxio.controller.image .Values.runtime.alluxio.controller.tag .Values.pullImageByVPCNetwork .Values.appendImageTag) }}
         name: manager
         command: ["alluxioruntime-controller", "start"]
         args:
@@ -43,15 +43,15 @@ spec:
           {{- end }}
           {{- if .Values.runtime.alluxio.init.image }}
           - name: ALLUXIO_INIT_IMAGE_ENV
-            value: {{ .Values.runtime.alluxio.init.image | quote }}
+            value: {{ include "fluid.imageTransform" (list .Values.runtime.alluxio.init.image .Values.runtime.alluxio.init.tag .Values.pullImageByVPCNetwork .Values.appendImageTag) }}
           {{- end }}
           {{- if .Values.runtime.alluxio.runtime.image }}
           - name: ALLUXIO_RUNTIME_IMAGE_ENV
-            value: {{ .Values.runtime.alluxio.runtime.image | quote }}
+            value: {{ include "fluid.imageTransform" (list .Values.runtime.alluxio.runtime.image .Values.runtime.alluxio.runtime.tag .Values.pullImageByVPCNetwork .Values.appendImageTag) }}
           {{- end }}
           {{- if .Values.runtime.alluxio.fuse.image }}
           - name: ALLUXIO_FUSE_IMAGE_ENV
-            value: {{ .Values.runtime.alluxio.fuse.image | quote }}
+            value: {{ include "fluid.imageTransform" (list .Values.runtime.alluxio.fuse.image .Values.runtime.alluxio.fuse.tag .Values.pullImageByVPCNetwork .Values.appendImageTag) }}
           {{- end }}
           {{- if .Values.runtime.mountRoot }}
           - name: MOUNT_ROOT

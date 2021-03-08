@@ -1,5 +1,5 @@
 apiVersion: v2
-name: fluid
+name: ack-fluid
 description: A Helm chart to deploy fluid in Kubernetes
 
 # A chart can be either an 'application' or a 'library' chart.
@@ -24,4 +24,9 @@ keywords:
   - category:data
   - fluid
   - namespace:fluid-system
-  - releaseName:fluid
+  - releaseName:ack-fluid
+
+sources:
+- https://github.com/fluid-cloudnative/fluids
+
+icon: fluid_logo.jpg

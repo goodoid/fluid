@@ -30,7 +30,7 @@ spec:
       tolerations:
         - operator: Exists
       containers:
-        - image: {{ .Values.runtime.jindo.controller.image | quote }}
+        - image: {{ include "fluid.imageTransform" (list .Values.runtime.jindo.controller.image .Values.runtime.jindo.controller.tag .Values.pullImageByVPCNetwork .Values.appendImageTag) }}
           name: manager
           command: ["jindoruntime-controller", "start"]
           args:

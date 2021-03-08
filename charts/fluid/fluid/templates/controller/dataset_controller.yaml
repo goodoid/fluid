@@ -36,7 +36,7 @@ spec:
       - operator: Exists
       #hostNetwork: true
       containers:
-      - image: "{{ .Values.dataset.controller.image }}"
+      - image: {{ include "fluid.imageTransform" (list .Values.dataset.controller.image .Values.dataset.controller.tag .Values.pullImageByVPCNetwork .Values.appendImageTag) }}
         name: manager
         command: ["dataset-controller", "start"]
         args:
@@ -48,7 +48,7 @@ spec:
           {{- end }}
           {{- if .Values.runtime.alluxio.runtime.image }}
           - name: ALLUXIO_RUNTIME_IMAGE_ENV
-            value: {{ .Values.runtime.alluxio.runtime.image | quote }}
+            value: {{ include "fluid.imageTransform" (list .Values.runtime.alluxio.runtime.image .Values.runtime.alluxio.runtime.tag .Values.pullImageByVPCNetwork .Values.appendImageTag) }}
           {{- end }}
         ports:
         - containerPort: 8080

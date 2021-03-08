@@ -3,16 +3,21 @@
 # Declare variables to be passed into your templates.
 
 workdir: /tmp
-
 dataset:
   controller:
-    image: registry.cn-hangzhou.aliyuncs.com/fluid/dataset-controller:v0.5.0-8c91abd
+    image: registry.__ACK_REGION_ID__.aliyuncs.com/fluid/dataset-controller:v0.5.0-8c91abd
+    tag: v0.5.0-8c91abd
+
+pullImageByVPCNetwork: true
+appendImageTag: false
 
 csi:
   registrar:
-    image: registry.cn-hangzhou.aliyuncs.com/acs/csi-node-driver-registrar:v1.2.0
+    image: registry.__ACK_REGION_ID__.aliyuncs.com/acs/csi-node-driver-registrar:v1.2.0
+    tag: v1.2.0
   plugins:
-    image: registry.cn-hangzhou.aliyuncs.com/fluid/fluid-csi:v0.5.0-8c91abd
+    image: registry.__ACK_REGION_ID__.aliyuncs.com/fluid/fluid-csi:v0.5.0-8c91abd
+    tag: v0.5.0-8c91abd
   kubelet:
     rootDir: /var/lib/kubelet
 
@@ -21,14 +26,19 @@ runtime:
   alluxio:
     enabled: true
     init:
-      image: registry.cn-hangzhou.aliyuncs.com/fluid/init-users:v0.5.0-8c91abd
+      image: registry.__ACK_REGION_ID__.aliyuncs.com/fluid/init-users:v0.5.0-8c91abd
+      tag: v0.5.0-8c91abd
     controller:
-      image: registry.cn-hangzhou.aliyuncs.com/fluid/alluxioruntime-controller:v0.5.0-8c91abd
+      image: registry.__ACK_REGION_ID__.aliyuncs.com/fluid/alluxioruntime-controller:v0.5.0-8c91abd
+      tag: v0.5.0-8c91abd
     runtime:
-      image: registry.cn-huhehaote.aliyuncs.com/alluxio/alluxio:2.4.1-2-SNAPSHOT-bfff8c6
+      image: registry.__ACK_REGION_ID__.aliyuncs.com/alluxio/alluxio:2.4.1-2-SNAPSHOT-bfff8c6
+      tag: 2.4.1-2-SNAPSHOT-bfff8c6
     fuse:
-      image: registry.cn-huhehaote.aliyuncs.com/alluxio/alluxio-fuse:2.4.1-2-SNAPSHOT-bfff8c6
+      image: registry.__ACK_REGION_ID__.aliyuncs.com/alluxio/alluxio-fuse:2.4.1-2-SNAPSHOT-bfff8c6
+      tag: 2.4.1-2-SNAPSHOT-bfff8c6
   jindo:
-    enabled: false
+    enabled: true
     controller:
-      image: registry.cn-hangzhou.aliyuncs.com/fluid/jindoruntime-controller:v0.5.0-8c91abd
+      image: registry.__ACK_REGION_ID__.aliyuncs.com/fluid/jindoruntime-controller:v0.5.0-8c91abd
+      tag: v0.5.0-8c91abd
